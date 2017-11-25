@@ -36,6 +36,7 @@ lazy_static! {
         m.insert("AoTs", AoTs as fn() -> TOMLDocument<'static>);
         m.insert("whitespace", whitespace as fn() -> TOMLDocument<'static>);
         m.insert("indented", indented as fn() -> TOMLDocument<'static>);
+        m.insert("shared-prefix", shared_prefix as fn() -> TOMLDocument<'static>);
         m
     };
 }
@@ -45,6 +46,7 @@ lazy_static! {
 #[test_case("tests/reconstruction/AoTs.toml", "AoTs" :: "AoT's")]
 #[test_case("tests/reconstruction/whitespace.toml", "whitespace" :: "Whitespace")]
 #[test_case("tests/reconstruction/indented.toml", "indented" :: "Indented")]
+#[test_case("tests/reconstruction/shared-prefix.toml", "shared-prefix" :: "Shared Prefix")]
 /// Constructs a copy of the reference document using the API and 
 /// compares the two `TOMLDocument` hierarchies.
 fn reconstuct<P: AsRef<Path> + Display>(path: P, constructor: &str) {
@@ -260,6 +262,49 @@ fn indented() -> TOMLDocument<'static> {
     trivia.indent = " ";
     let key = Key::new("int");
     let value = Item::Integer {val: 42, meta: trivia, raw: "42"};
+    container.append(key, value).unwrap();
+
+    TOMLDocument(container)
+}
+
+fn shared_prefix() -> TOMLDocument<'static> {
+    let mut container = Container::new();
+
+    // [not]
+    let mut key = Key::new("not");
+    key.sep = "";
+    let value = {
+        let mut container_not = Container::new();
+        container_not.append(None, Item::WS(::NL)).unwrap();
+
+        Item::Table {is_array: false, val: container_not, meta: Trivia::empty()}
+    };
+    container.append(key, value).unwrap();
+
+    // [not-a-child]
+    let mut key = Key::new("not-a-child");
+    key.sep = "";
+    let value = {
+        let mut container_not_a_child = Container::new();
+        container_not_a_child.append(None, Item::WS(::NL)).unwrap();
+
+        Item::Table {is_array: false, val: container_not_a_child, meta: Trivia::empty()}
+    };
+    container.append(key, value).unwrap();
+
+    // [not.foo]
+    let mut key = Key::new("not.foo");
+    key.sep = "";
+    let value = {
+        let mut container_not_foo = Container::new();
+
+        let mut key = Key::new("1");
+        key.sep = "   =  ";
+        let value = Item::Integer {val: 24, meta: Trivia::empty(), raw: "24"};
+        container_not_foo.append(key, value).unwrap();
+
+        Item::Table {is_array: false, val: container_not_foo, meta: Trivia::empty()}
+    };
     container.append(key, value).unwrap();
 
     TOMLDocument(container)

@@ -169,7 +169,8 @@ impl<'a> Parser<'a> {
     /// Returns whether a key is strictly a child of another key.
     /// AoT siblings are not considered children of one another.
     fn is_child(parent: &str, child: &str) -> bool {
-        child != parent && child.starts_with(parent)
+        child != parent && child.starts_with(parent) &&
+            parent.get(child.len()..child.len() + 1) == Some(".")
     }
 
     /// Attempts to parse the next item and returns it, along with its key

@@ -129,7 +129,7 @@ impl<'a> PartialEq for Key<'a> {
 
 impl<'a> ::std::fmt::Debug for Key<'a> {
     fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
-        write!(f, "{}", self.key)
+        write!(f, "{} (sep: \"{}\")", self.as_string(), self.sep)
     }
 }
 
